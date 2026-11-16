@@ -2,17 +2,14 @@
 
 This workspace is configured for Google Antigravity (Antigravity IDE and `agy` CLI).
 
-## Candidate Profile Summary
-* **Candidate:** Druvasena Reddy Naini
-* **Target Roles:** Backend Engineer, Software Engineer II (SDE-2), Distributed Systems Engineer
-* **Core Stack:** Golang (Primary), Microservices, Concurrency (Goroutines/Channels), Apache Kafka, Redis, PostgreSQL, Docker, Kubernetes, Linux
-* **Current Experience:** Software Engineer at TCS (Aug 2023 - Present, ~2.5 years)
-  - Owns 6 production Golang microservices processing 10M+ daily API requests with 99.9% uptime.
-  - High-frequency allocation engine handling 500+ requests/second with distributed locking and 100% state consistency.
-  - Kafka event pipelines processing 1.5M+ daily events with DLQ and retries.
-  - Strategic Redis caching reducing DB load by 40% and keeping p99 API latency under 50ms.
-* **Flagship Project:** TrueBite (Distributed AI food label intelligence platform using LangGraph, Weaviate RAG, 4 Golang microservices, and Redis caching).
-* **Education:** B.Tech in Information Technology, MLR Institute of Technology, Hyderabad (Aug 2019 - Jun 2023), CGPA: 7.5/10.
+## Candidate Profile (Single Source of Truth)
+
+Per the workspace's thin-pointer architecture, candidate profile details, contact information, target roles, verified experience, and skill rubrics are maintained in:
+
+* [CLAUDE.md](CLAUDE.md): Primary candidate profile, identity, target roles, and guidelines.
+* [.claude/skills/job-application-assistant/01-candidate-profile.md](.claude/skills/job-application-assistant/01-candidate-profile.md): Structured profile data, verified achievements, and competencies.
+
+To prevent configuration drift, personal data is not duplicated here. Always refer to [CLAUDE.md](CLAUDE.md) as the canonical source.
 
 ---
 
