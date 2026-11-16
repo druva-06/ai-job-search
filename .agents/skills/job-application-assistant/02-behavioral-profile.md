@@ -1,0 +1,1 @@
+../../../.claude/skills/job-application-assistant/02-behavioral-profile.md

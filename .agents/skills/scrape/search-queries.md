@@ -1,0 +1,1 @@
+../../../.claude/skills/job-scraper/search-queries.md

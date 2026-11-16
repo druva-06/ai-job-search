@@ -1,0 +1,1 @@
+../../../.claude/skills/job-application-assistant/06-cover-letter-templates.md

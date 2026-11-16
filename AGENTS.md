@@ -1,19 +1,45 @@
 ---
-framework_version: 1.0.0
+framework_version: 1.1.0
 ---
 
 # Agent Guidelines: AI Job Search
 
-This workspace is structured to manage job search activities, scraper tools, CVs, cover letters, and interview preparation.
+This workspace is structured to manage job search activities, scraper tools, CVs, cover letters, and interview preparation across multiple AI agent runtimes (Claude Code, Google Antigravity, OpenAI Codex, Cursor).
 
-## Thin-Pointer Design (Single Source of Truth)
+## Multi-Agent Thin-Pointer Architecture
 
-To prevent duplication and configuration drift across different AI agent frameworks (Claude Code, Google Antigravity, Codex, Cursor, Gemini CLI, etc.), this workspace uses a unified thin-pointer design. All agent runtimes should load the canonical specifications and candidate profiles from the files and directories below:
+To prevent duplication and configuration drift across different AI agent frameworks, this workspace uses a unified hierarchy:
 
-1. **Personal Candidate Profile:**
-   - The candidate profile, contact details, education, and target preferences are defined in [CLAUDE.md](CLAUDE.md) and the individual profile methodology files under [.claude/skills/job-application-assistant/](.claude/skills/job-application-assistant/) (specifically `01-*.md` etc.).
-2. **Canonical Workflow Specifications:**
-   - The step-by-step instructions and triggers for tasks (setup, scrape, rank, apply, upskill, interview) are defined in the [.claude/](.claude/) directory (specifically under `.claude/skills/` and `.claude/commands/`).
-   - Do not duplicate these rules or specifications. Treat `.claude/` files as the single source of truth.
-3. **Portal Search Skills:**
-   - Job-portal search CLIs live under [.agents/skills/](.agents/skills/) in the portable Agent Skills format (with a `SKILL.md` per portal). Codex and Antigravity discover these automatically; the `/scrape` workflow in [.claude/skills/job-scraper/](.claude/skills/job-scraper/) orchestrates them.
+1. **Vendor-Neutral Skills & Workflows (`.agents/skills/`):**
+   - The portable Agent Skills format lives in `.agents/skills/`.
+   - Google Antigravity (`agy` CLI and IDE) and OpenAI Codex automatically discover all skills here.
+   - Each skill directory contains a `SKILL.md` with standard YAML frontmatter (`name`, `description`).
+   - In Antigravity interactive mode, every skill automatically maps to its slash command:
+     - `/scrape`: Multi-portal job scraping and deduplication
+     - `/rank`: 5-dimension fit scoring and shortlist generation
+     - `/apply`: Drafter-reviewer application drafting (1-page CV and cover letter)
+     - `/interview`: Targeted interview cheat sheets and STAR stories
+     - `/setup`: Candidate profile calibration and search query setup
+     - `/outcome`: Application lifecycle status tracking and feedback calibration
+     - `/upskill`: Skill gap analysis and personalized learning plans
+     - `/html-report`: Visual pipeline metrics dashboard
+     - `/add-portal`: New job board search CLI integration
+     - `/add-template`: New CV or cover letter layout template registration
+
+2. **Claude Code Runtime Compatibility (`.claude/`):**
+   - Claude Code reads slash commands from `.claude/commands/*.md` and skills from `.claude/skills/*/SKILL.md`.
+   - Tool permissions and sandbox policies are defined in `.claude/settings.json`.
+   - Both `.claude/` and `.agents/skills/` are maintained in parallel without code or instruction divergence.
+
+3. **Candidate Profile & Methodology Modules:**
+   - Candidate profile data, behavioral profile, writing style rules, and evaluation rubrics live in `.claude/skills/job-application-assistant/` (numbered `01-*.md` through `09-*.md`) and are symlinked into `.agents/skills/job-application-assistant/`.
+   - Any updates made in one path reflect instantly across all agent runtimes with zero file drift.
+
+4. **Portal Search CLIs:**
+   - Dedicated portal search CLIs live under `.agents/skills/<portal>-search/` and are executed via Bun.
+   - Portals include `linkedin-search`, `freehire-search`, and Danish boards (`jobindex-search`, `jobnet-search`, `jobbank-search`, `jobdanmark-search`).
+
+5. **Style and Formatting Rules:**
+   - **No em-dashes:** Do not use em-dashes or en-dashes. Use commas, hyphens, or periods.
+   - **Strict 1-page CV:** Moderncv banking style at 11pt font must compile to exactly 1 page.
+   - **Strict honesty:** Never hallucinate or exaggerate skills beyond verified experience.

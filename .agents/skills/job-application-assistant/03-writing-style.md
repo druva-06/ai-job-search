@@ -1,0 +1,1 @@
+../../../.claude/skills/job-application-assistant/03-writing-style.md

@@ -1,0 +1,1 @@
+../../../.claude/skills/job-application-assistant/04-job-evaluation.md
