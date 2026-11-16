@@ -451,7 +451,7 @@ FRONTEND_HTML = """<!DOCTYPE html>
     /* Filter Controls Grid */
     .filters-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
       gap: 1rem;
       padding-top: 0.5rem;
       border-top: 1px solid var(--border);
@@ -460,6 +460,7 @@ FRONTEND_HTML = """<!DOCTYPE html>
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
+      min-width: 0;
     }
     .filter-group label {
       font-size: 0.75rem;
@@ -476,8 +477,51 @@ FRONTEND_HTML = """<!DOCTYPE html>
       border-radius: var(--radius);
       font-size: 0.85rem;
       outline: none;
+      width: 100%;
+      box-sizing: border-box;
     }
     .filter-select:focus, .filter-input:focus { border-color: var(--border-focus); }
+
+    /* Custom Date Filter Component */
+    .date-filter-group {
+      min-width: 0;
+    }
+    .date-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .date-field-select {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 0.15rem 0.45rem;
+      border-radius: var(--radius);
+      font-size: 0.75rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+    .date-field-select:focus { border-color: var(--border-focus); }
+    .date-inputs-row {
+      display: flex;
+      gap: 0.35rem;
+      align-items: center;
+      width: 100%;
+    }
+    .date-picker-input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      font-size: 0.78rem;
+      padding: 0.35rem 0.4rem;
+    }
+    .date-sep {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
 
     /* Date Preset Pills */
     .chips-group {
@@ -981,16 +1025,18 @@ FRONTEND_HTML = """<!DOCTYPE html>
         </div>
 
         <!-- Date Range: From / To -->
-        <div class="filter-group">
-          <label>Custom Date Filter</label>
-          <div style="display: flex; gap: 0.35rem; align-items: center;">
-            <select id="dateFieldSelect" class="filter-select" style="min-width: 90px;">
+        <div class="filter-group date-filter-group">
+          <div class="date-header-row">
+            <label>Custom Date Filter</label>
+            <select id="dateFieldSelect" class="date-field-select" title="Target date field">
               <option value="first_seen">First Seen</option>
               <option value="posted_date">Posted</option>
             </select>
-            <input type="date" id="dateFrom" class="filter-input" title="From Date">
-            <span style="font-size: 0.75rem; color: var(--text-muted);">&rarr;</span>
-            <input type="date" id="dateTo" class="filter-input" title="To Date">
+          </div>
+          <div class="date-inputs-row">
+            <input type="date" id="dateFrom" class="filter-input date-picker-input" title="From Date">
+            <span class="date-sep">&rarr;</span>
+            <input type="date" id="dateTo" class="filter-input date-picker-input" title="To Date">
           </div>
         </div>
 
@@ -1819,6 +1865,7 @@ FRONTEND_HTML = """<!DOCTYPE html>
       state.portal = "";
       state.fit = "";
       state.status = "";
+      state.dateField = "first_seen";
       state.dateFrom = "";
       state.dateTo = "";
       state.minScore = 0;
@@ -1829,6 +1876,7 @@ FRONTEND_HTML = """<!DOCTYPE html>
       document.getElementById("portalSelect").value = "";
       document.getElementById("fitSelect").value = "";
       document.getElementById("statusSelect").value = "";
+      document.getElementById("dateFieldSelect").value = "first_seen";
       document.getElementById("dateFrom").value = "";
       document.getElementById("dateTo").value = "";
       document.getElementById("scoreRange").value = 0;
