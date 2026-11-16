@@ -23,6 +23,7 @@ To prevent duplication and configuration drift across different AI agent framewo
      - `/outcome`: Application lifecycle status tracking and feedback calibration
      - `/upskill`: Skill gap analysis and personalized learning plans
      - `/html-report`: Visual pipeline metrics dashboard
+     - `/dashboard`: Live interactive web dashboard and manager for seen_jobs.json
      - `/add-portal`: New job board search CLI integration
      - `/add-template`: New CV or cover letter layout template registration
 
