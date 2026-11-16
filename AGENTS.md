@@ -39,7 +39,12 @@ To prevent duplication and configuration drift across different AI agent framewo
    - Dedicated portal search CLIs live under `.agents/skills/<portal>-search/` and are executed via Bun.
    - Portals include `linkedin-search`, `freehire-search`, and Danish boards (`jobindex-search`, `jobnet-search`, `jobbank-search`, `jobdanmark-search`).
 
-5. **Style and Formatting Rules:**
+5. **Interactive Seen Jobs Web Dashboard & Management Tool:**
+   - Run `python3 tools/seen_jobs_dashboard.py` to start the live interactive web dashboard for `job_scraper/seen_jobs.json`.
+   - Features rich filtering (date presets, custom ranges, company, portal, score, search), real-time live auto-update on disk changes, atomic deletions with automated backups (`seen_jobs.json.bak-*`), and 1-click restore.
+   - Run with `--export reports/seen_jobs_dashboard.html` to generate an offline standalone HTML report.
+
+6. **Style and Formatting Rules:**
    - **No em-dashes:** Do not use em-dashes or en-dashes. Use commas, hyphens, or periods.
    - **Strict 1-page CV:** Moderncv banking style at 11pt font must compile to exactly 1 page.
    - **Strict honesty:** Never hallucinate or exaggerate skills beyond verified experience.
