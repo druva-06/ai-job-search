@@ -61,7 +61,29 @@ def load_data(path: Path) -> tuple[dict, dict]:
         raise ValueError(f"Failed to read {path}: {exc}") from exc
     if not isinstance(doc, dict) or not isinstance(doc.get("seen"), dict):
         raise ValueError(f"{path}: expected JSON object with 'seen' dictionary")
-    return doc, doc["seen"]
+
+    # Older scrape runs wrote records beside the canonical "seen" map. Merge
+    # those records into the map so the dashboard does not hide newer jobs.
+    seen = dict(doc["seen"])
+    legacy_keys = []
+    for key, value in doc.items():
+        if key == "seen" or not isinstance(value, dict):
+            continue
+        if not all(isinstance(value.get(field), str) and value[field].strip() for field in ("title", "url")):
+            continue
+        entry = dict(value)
+        if "posted_date" not in entry and "date_posted" in entry:
+            entry["posted_date"] = entry["date_posted"]
+        if "first_seen" not in entry and "scraped_at" in entry:
+            entry["first_seen"] = entry["scraped_at"]
+        seen.setdefault(key, entry)
+        legacy_keys.append(key)
+
+    if legacy_keys:
+        doc = {"seen": seen}
+    else:
+        doc["seen"] = seen
+    return doc, seen
 
 
 def save_data(path: Path, doc: dict) -> None:

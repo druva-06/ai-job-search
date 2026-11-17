@@ -77,6 +77,26 @@ class TestSeenJobsDataLayer(unittest.TestCase):
         doc_empty, seen_empty = load_data(non_existent)
         self.assertEqual(seen_empty, {})
 
+    def test_load_merges_legacy_top_level_jobs(self):
+        legacy_doc = {
+            "seen": {"old": self.sample_doc["seen"]["job1"]},
+            "new_job": {
+                "title": "Fresh Job",
+                "company": "Fresh Co",
+                "url": "https://example.com/jobs/fresh",
+                "date_posted": "2026-11-17",
+                "scraped_at": "2026-11-17",
+            },
+        }
+        self.state_file.write_text(json.dumps(legacy_doc), encoding="utf-8")
+
+        doc, seen = load_data(self.state_file)
+
+        self.assertEqual(set(seen), {"old", "new_job"})
+        self.assertEqual(seen["new_job"]["posted_date"], "2026-11-17")
+        self.assertEqual(seen["new_job"]["first_seen"], "2026-11-17")
+        self.assertEqual(set(doc), {"seen"})
+
     def test_file_signature_changes_after_atomic_save(self):
         before = file_signature(self.state_file)
         doc, seen = load_data(self.state_file)
