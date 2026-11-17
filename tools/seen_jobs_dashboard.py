@@ -42,6 +42,14 @@ DEFAULT_HOST = "127.0.0.1"
 # Data Layer: Atomic Storage, Backups & Deletions
 # ---------------------------------------------------------------------------
 
+def file_signature(path: Path) -> str:
+    """Return a change token that survives same-size and coarse-mtime writes."""
+    if not path.exists():
+        return "missing"
+    stat = path.stat()
+    return f"{stat.st_mtime_ns}:{stat.st_size}:{stat.st_ino}"
+
+
 def load_data(path: Path) -> tuple[dict, dict]:
     """Load seen_jobs.json ensuring correct structure."""
     if not path.is_file():
@@ -1224,6 +1232,7 @@ FRONTEND_HTML = """<!DOCTYPE html>
     let visibleJobs = [];
     let selectedKeys = new Set();
     let currentMtime = 0;
+    let currentSignature = "";
     let isOffline = false;
     let currentViewMode = "table"; // 'table' or 'cards'
 
@@ -1289,10 +1298,11 @@ FRONTEND_HTML = """<!DOCTYPE html>
     // Fetch jobs from server
     async function fetchJobs() {
       try {
-        const resp = await fetch("/api/jobs");
+        const resp = await fetch("/api/jobs?ts=" + Date.now(), { cache: "no-store" });
         if (!resp.ok) throw new Error("Failed to load jobs");
         const data = await resp.json();
         currentMtime = data.mtime || 0;
+        currentSignature = data.signature || "";
         loadPayload(data);
       } catch (err) {
         console.error("fetchJobs error:", err);
@@ -1330,11 +1340,15 @@ FRONTEND_HTML = """<!DOCTYPE html>
       setInterval(async () => {
         if (isOffline) return;
         try {
-          const resp = await fetch("/api/status");
+          const resp = await fetch("/api/status?ts=" + Date.now(), { cache: "no-store" });
           if (!resp.ok) return;
           const status = await resp.json();
-          if (status.mtime && status.mtime !== currentMtime) {
-            currentMtime = status.mtime;
+          const changed = status.signature
+            ? status.signature !== currentSignature
+            : status.mtime !== currentMtime;
+          if (changed) {
+            currentMtime = status.mtime || 0;
+            currentSignature = status.signature || "";
             await fetchJobs();
             showToast("Detected new jobs on disk. Refreshed view!", "success");
           }
@@ -1378,7 +1392,12 @@ FRONTEND_HTML = """<!DOCTYPE html>
       document.getElementById("statTotal").textContent = allJobs.length;
       document.getElementById("totalCount").textContent = allJobs.length;
 
-      const todayStr = new Date().toISOString().slice(0, 10);
+      const today = new Date();
+      const todayStr = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0"),
+      ].join("-");
       const seenToday = allJobs.filter(j => j.first_seen === todayStr).length;
       document.getElementById("statToday").textContent = seenToday;
 
@@ -1401,7 +1420,11 @@ FRONTEND_HTML = """<!DOCTYPE html>
     // Filter & Sort Logic
     function applyFiltersAndRender() {
       const today = new Date();
-      const todayStr = today.toISOString().slice(0, 10);
+      const todayStr = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0"),
+      ].join("-");
 
       visibleJobs = allJobs.filter(job => {
         // Global text search
@@ -2077,6 +2100,7 @@ class SeenJobsHTTPRequestHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
             self.end_headers()
             self.wfile.write(body)
             return
@@ -2089,6 +2113,7 @@ class SeenJobsHTTPRequestHandler(BaseHTTPRequestHandler):
                     "seen": seen,
                     "count": len(seen),
                     "mtime": mtime,
+                    "signature": file_signature(self.state_file),
                     "path": str(self.state_file),
                 })
             except Exception as exc:
@@ -2102,7 +2127,11 @@ class SeenJobsHTTPRequestHandler(BaseHTTPRequestHandler):
                 if self.state_file.exists():
                     doc, seen = load_data(self.state_file)
                     count = len(seen)
-                self.send_json({"mtime": mtime, "count": count})
+                self.send_json({
+                    "mtime": mtime,
+                    "signature": file_signature(self.state_file),
+                    "count": count,
+                })
             except Exception as exc:
                 self.send_json({"error": str(exc)}, status=500)
             return

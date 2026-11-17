@@ -19,6 +19,7 @@ from tools.seen_jobs_dashboard import (
     delete_max_cap,
     delete_older_than,
     export_standalone_html,
+    file_signature,
     list_backups,
     load_data,
     restore_backup,
@@ -75,6 +76,13 @@ class TestSeenJobsDataLayer(unittest.TestCase):
         non_existent = self.test_dir / "missing.json"
         doc_empty, seen_empty = load_data(non_existent)
         self.assertEqual(seen_empty, {})
+
+    def test_file_signature_changes_after_atomic_save(self):
+        before = file_signature(self.state_file)
+        doc, seen = load_data(self.state_file)
+        seen["job4"] = {"title": "New Job"}
+        save_data(self.state_file, doc)
+        self.assertNotEqual(file_signature(self.state_file), before)
 
     def test_create_and_restore_backup(self):
         backup_path = create_backup(self.state_file)
@@ -226,6 +234,7 @@ class TestSeenJobsAPIEndpoints(unittest.TestCase):
         data = json.loads(req.read().decode("utf-8"))
         self.assertEqual(data["count"], 1)
         self.assertGreater(data["mtime"], 0)
+        self.assertTrue(data["signature"])
 
     def test_post_delete_and_restore_api(self):
         # Post deletion
