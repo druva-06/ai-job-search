@@ -938,6 +938,37 @@ FRONTEND_HTML = """<!DOCTYPE html>
       padding: 3rem 1.5rem;
       color: var(--text-muted);
     }
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-top: 0;
+      border-radius: 0 0 var(--radius) var(--radius);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+    .pagination-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .pagination-actions .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    @media (max-width: 640px) {
+      .pagination-bar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .pagination-actions {
+        justify-content: space-between;
+      }
+    }
   </style>
 </head>
 <body data-theme="dark">
@@ -1104,6 +1135,13 @@ FRONTEND_HTML = """<!DOCTYPE html>
           <option value="company_asc">Company (A &rarr; Z)</option>
           <option value="title_asc">Job Title (A &rarr; Z)</option>
         </select>
+        <label style="font-size: 0.75rem; color: var(--text-muted);">Page size:</label>
+        <select id="pageSizeSelect" class="filter-select" title="Jobs per page">
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="0">All</option>
+        </select>
         <button class="btn btn-sm" id="btnToggleView">&#x229E; Switch View</button>
       </div>
     </div>
@@ -1133,6 +1171,14 @@ FRONTEND_HTML = """<!DOCTYPE html>
           </tbody>
         </table>
       </div>
+        <div class="pagination-bar" id="paginationBar">
+          <span id="paginationSummary">Page 1 of 1</span>
+          <div class="pagination-actions">
+            <button class="btn btn-sm" id="btnPreviousPage">Previous</button>
+            <span id="paginationPageLabel">1 / 1</span>
+            <button class="btn btn-sm" id="btnNextPage">Next</button>
+          </div>
+        </div>
     </div>
 
     <!-- Card View (Hidden by default, toggled via Switch View) -->
@@ -1270,6 +1316,8 @@ FRONTEND_HTML = """<!DOCTYPE html>
       dateTo: "",
       minScore: 0,
       sortBy: "date_desc",
+      page: 1,
+      pageSize: 25,
     };
 
     // DOM Elements
@@ -1518,6 +1566,7 @@ FRONTEND_HTML = """<!DOCTYPE html>
       });
 
       // Update counters
+      state.page = 1;
       document.getElementById("visibleCount").textContent = visibleJobs.length;
       document.getElementById("tabFilteredCount").textContent = visibleJobs.length;
       document.getElementById("filteredDeleteCountDisplay").textContent = visibleJobs.length;
@@ -1557,10 +1606,12 @@ FRONTEND_HTML = """<!DOCTYPE html>
         tableView.style.display = "none";
         cardsView.style.display = "none";
         emptyState.style.display = "block";
+        updatePagination();
         return;
       }
 
       emptyState.style.display = "none";
+      updatePagination();
       if (currentViewMode === "table") {
         tableView.style.display = "block";
         cardsView.style.display = "none";
@@ -1572,9 +1623,32 @@ FRONTEND_HTML = """<!DOCTYPE html>
       }
     }
 
+    function totalPages() {
+      return state.pageSize === 0 ? 1 : Math.max(1, Math.ceil(visibleJobs.length / state.pageSize));
+    }
+
+    function paginatedJobs() {
+      if (state.pageSize === 0) return visibleJobs;
+      const start = (state.page - 1) * state.pageSize;
+      return visibleJobs.slice(start, start + state.pageSize);
+    }
+
+    function updatePagination() {
+      const pages = totalPages();
+      state.page = Math.min(state.page, pages);
+      const start = visibleJobs.length === 0 ? 0 : state.pageSize === 0 ? 1 : (state.page - 1) * state.pageSize + 1;
+      const end = visibleJobs.length === 0 ? 0 : state.pageSize === 0 ? visibleJobs.length : Math.min(state.page * state.pageSize, visibleJobs.length);
+      document.getElementById("paginationSummary").textContent = visibleJobs.length === 0
+        ? "No jobs to display"
+        : `Showing ${start}-${end} of ${visibleJobs.length}`;
+      document.getElementById("paginationPageLabel").textContent = `${state.page} / ${pages}`;
+      document.getElementById("btnPreviousPage").disabled = state.page <= 1;
+      document.getElementById("btnNextPage").disabled = state.page >= pages;
+    }
+
     function renderTable() {
       jobsTableBody.innerHTML = "";
-      visibleJobs.forEach(job => {
+      paginatedJobs().forEach(job => {
         const isSelected = selectedKeys.has(job.key);
         const tr = document.createElement("tr");
         if (isSelected) tr.className = "selected";
@@ -1636,7 +1710,7 @@ FRONTEND_HTML = """<!DOCTYPE html>
 
     function renderCards() {
       cardsView.innerHTML = "";
-      visibleJobs.forEach(job => {
+      paginatedJobs().forEach(job => {
         const isSelected = selectedKeys.has(job.key);
         const card = document.createElement("div");
         card.className = "job-card" + (isSelected ? " selected" : "");
@@ -1823,6 +1897,26 @@ FRONTEND_HTML = """<!DOCTYPE html>
       document.getElementById("sortSelect").addEventListener("change", (e) => {
         state.sortBy = e.target.value;
         applyFiltersAndRender();
+      });
+
+      document.getElementById("pageSizeSelect").addEventListener("change", (e) => {
+        state.pageSize = parseInt(e.target.value, 10);
+        state.page = 1;
+        renderJobs();
+      });
+
+      document.getElementById("btnPreviousPage").addEventListener("click", () => {
+        if (state.page > 1) {
+          state.page--;
+          renderJobs();
+        }
+      });
+
+      document.getElementById("btnNextPage").addEventListener("click", () => {
+        if (state.page < totalPages()) {
+          state.page++;
+          renderJobs();
+        }
       });
 
       // Clear all filters
