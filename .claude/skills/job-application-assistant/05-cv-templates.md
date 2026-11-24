@@ -28,6 +28,7 @@ Expected output: `Output written on main_<company>_<role>.pdf (2 pages, ...)`. A
 \documentclass[11pt,a4paper,sans]{moderncv}
 \moderncvstyle{banking}
 \moderncvcolor{blue}
+\nopagenumbers{} % Suppress footer page numbering for 1-page CV
 
 % Force the name and section headings to render in moderncv blue (color1).
 % Default banking leaves them black: moderncvstylebanking.sty's \colorlet

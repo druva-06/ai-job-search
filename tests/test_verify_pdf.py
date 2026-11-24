@@ -390,5 +390,23 @@ class DumpTargetTests(unittest.TestCase):
         self.assertFalse(target.parent.exists(), "the CLI must not create the parent directory")
 
 
+class SinglePageFooterCheckTests(unittest.TestCase):
+    @patch("tools.verify_pdf.extract_text_layer")
+    def test_single_page_rejects_phantom_page_fractions(self, mock_extract):
+        mock_extract.return_value = ("Experience at TCS...\nEducation\nB.Tech 2023\n1/2\n", 1, "test")
+        with tempfile.NamedTemporaryFile(suffix=".pdf") as tmp:
+            with self.assertRaises(VerificationError) as ctx:
+                verify_pdf(tmp.name, expected_pages=1)
+            self.assertIn("1/2", str(ctx.exception))
+            self.assertIn("nopagenumbers", str(ctx.exception))
+
+    @patch("tools.verify_pdf.extract_text_layer")
+    def test_single_page_allows_clean_footer(self, mock_extract):
+        mock_extract.return_value = ("Experience at TCS...\nEducation\nB.Tech 2023\n", 1, "test")
+        with tempfile.NamedTemporaryFile(suffix=".pdf") as tmp:
+            extractor, text, pages = verify_pdf(tmp.name, expected_pages=1)
+            self.assertEqual(pages, 1)
+
+
 if __name__ == "__main__":
     unittest.main()

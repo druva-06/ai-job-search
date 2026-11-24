@@ -45,7 +45,7 @@ Follow these steps in order:
 
 1. Style and Templates:
    - Follow [.agents/skills/job-application-assistant/03-writing-style.md](../job-application-assistant/03-writing-style.md): Warm but direct, strictly grounded facts, no cliches, and **zero em-dashes**.
-   - Read master CV in `cv/main.tex` and template guide in [.agents/skills/job-application-assistant/05-cv-templates.md](../job-application-assistant/05-cv-templates.md).
+   - Read master CV in `cv/main.tex` and template guide in [.agents/skills/job-application-assistant/05-cv-templates.md](../job-application-assistant/05-cv-templates.md). Moderncv CVs must include `\nopagenumbers{}` in the preamble to suppress footers on 1-page documents.
    - Read cover letter template in `cover_letters/cover_example.tex` and [.agents/skills/job-application-assistant/06-cover-letter-templates.md](../job-application-assistant/06-cover-letter-templates.md).
 2. Write Tailored Files:
    - CV: `cv/main_<company>_<role>.tex`

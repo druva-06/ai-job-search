@@ -313,6 +313,16 @@ def verify_pdf(
                 f"ASCII hyphen (05-cv-templates.md, 'Date fields must be ASCII ranges'): "
                 f"{listed} (extractor: {extractor})"
             )
+
+    if expected_pages == 1:
+        tail_lines = [l.strip() for l in extracted_text.splitlines()[-4:] if l.strip()]
+        for line in tail_lines:
+            if re.fullmatch(r"1/[1-9]\d*", line) or re.search(r"\bpage\s+1\s*(?:of|/)\s*\d+\b", line, re.I):
+                raise VerificationError(
+                    f"single-page PDF contains unwanted page numbering '{line}' in footer text layer. "
+                    "A 1-page document must not have page numbers (e.g. '1/2' or '1/1'). "
+                    "For moderncv, add '\\nopagenumbers{}' to the LaTeX preamble."
+                )
     return extractor, extracted_text, actual_pages
 
 
